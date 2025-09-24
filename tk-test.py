@@ -34,7 +34,7 @@ def fetch_articles():
     checkboxes.clear()
     articles_links.clear()
 
-    # Bouton Tout sélectionner
+    # Bouton Tout sélectionner / désélectionner
     toggle_btn = ctk.CTkButton(
         article_frame,
         text="Tout sélectionner",
@@ -64,7 +64,7 @@ def fetch_articles():
                         article_frame,
                         text=f"{idx+1}. {title}",
                         variable=var,
-                        font=("TakaoPGothic", 16),
+                        font=("Verdana", 16),
                         corner_radius=8,
                         fg_color="#1f6aa5",
                         hover_color="#144870",
@@ -86,31 +86,26 @@ def toggle_all():
     if not checkboxes:
         return
     all_selected = all(cb.var.get() for cb, _ in checkboxes)
-    if all_selected:
-        for cb, _ in checkboxes:
-            cb.var.set(False)
-        article_frame.toggle_btn.configure(text="Tout sélectionner")
-    else:
-        for cb, _ in checkboxes:
-            cb.var.set(True)
-        article_frame.toggle_btn.configure(text="Tout désélectionner")
+    for cb, _ in checkboxes:
+        cb.var.set(not all_selected)
+    article_frame.toggle_btn.configure(
+        text="Tout désélectionner" if not all_selected else "Tout sélectionner"
+    )
 
 def pick_date():
-    # Positionner à côté du bouton
     btn_x = date_button.winfo_rootx()
     btn_y = date_button.winfo_rooty()
     top = ctk.CTkToplevel(root)
     top.title("Sélectionnez une date ou une période")
     top.geometry(f"+{btn_x}+{btn_y + date_button.winfo_height() + 5}")
-
-    top.update()
-    top.grab_set()  # bloque l'interaction avec la fenêtre principale
+    top.transient(root)  # <-- attache la fenêtre à root
+    top.update()         # <-- force l’affichage avant grab
+    top.grab_set()       # <-- maintenant grab_set() fonctionne
 
     cal_frame = ctk.CTkFrame(top, corner_radius=12, fg_color="#2e2e2e")
     cal_frame.pack(padx=10, pady=10)
 
     today = datetime.today().date()
-
     cal = Calendar(
         cal_frame,
         selectmode="day",
@@ -118,23 +113,21 @@ def pick_date():
         month=today.month,
         day=today.day,
         background="#2e2e2e",
-        disabledbackground="#1e1e1e",
         foreground="white",
-        disabledforeground="#555555",
         selectbackground="#1f6aa5",
         selectforeground="white",
         weekendbackground="#3a3a3a",
-        weekendforeground="#7ec0ee",  # bleu clair pour weekend
+        weekendforeground="#7ec0ee",
         othermonthforeground="#888888",
         bordercolor="#444444",
         headersbackground="#444444",
         headersforeground="white",
-        font=("TakaoPGothic", 12),
-        maxdate=today                 # pas de date ultérieure à aujourd'hui
+        font=("Verdana", 12),
+        maxdate=today
     )
     cal.pack(padx=5, pady=5)
 
-    info_label = ctk.CTkLabel(top, text="Cliquez pour début/fin de période. Validez avec OK.", font=("TakaoPGothic", 12))
+    info_label = ctk.CTkLabel(top, text="Cliquez pour début/fin de période. Validez avec OK.", font=("Verdana", 12))
     info_label.pack(pady=5)
 
     selecting_period = {"in_progress": False}
@@ -159,7 +152,6 @@ def pick_date():
 
     def on_click(event):
         selected = cal.selection_get()
-
         if not selecting_period["in_progress"] or (date_range["start"] and date_range["end"]):
             clear_highlight()
             date_range["start"] = selected
@@ -175,13 +167,9 @@ def pick_date():
             selecting_period["in_progress"] = False
 
         if date_range["start"] and date_range["end"] and date_range["end"] != date_range["start"]:
-            date_label.configure(
-                text=f"Du {date_range['start'].strftime('%d/%m/%Y')} au {date_range['end'].strftime('%d/%m/%Y')}"
-            )
+            date_label.configure(text=f"Du {date_range['start'].strftime('%d/%m/%Y')} au {date_range['end'].strftime('%d/%m/%Y')}")
         elif date_range["start"]:
-            date_label.configure(
-                text=f"{date_range['start'].strftime('%d/%m/%Y')}"
-            )
+            date_label.configure(text=f"{date_range['start'].strftime('%d/%m/%Y')}")
         else:
             date_label.configure(text="Aucune date sélectionnée")
 
@@ -194,9 +182,10 @@ def pick_date():
         corner_radius=12,
         fg_color="#1f6aa5",
         hover_color="#144870",
-        font=("TakaoPGothic", 14, "bold")
+        font=("Verdana", 14, "bold")
     ).pack(pady=10)
 
+# --- Navigation Page 1 <-> Page 2 ---
 def suivant():
     selected_articles = []
     selected_links = []
@@ -209,16 +198,30 @@ def suivant():
         messagebox.showinfo("Aucun article sélectionné", "Veuillez cocher au moins un article.")
         return
 
-    msg = "\n".join(f"{title} -> {link}" for title, link in zip(selected_articles, selected_links))
-    messagebox.showinfo("Articles sélectionnés", msg)
+    # Remplir la page 2
+    page2_text.configure(state="normal")
+    page2_text.delete("0.0", "end")
+    for title, link in zip(selected_articles, selected_links):
+        page2_text.insert("end", f"{title} -> {link}\n")
+    page2_text.configure(state="disabled")
 
-# Fenêtre principale
+    # Afficher page 2 et cacher page 1
+    article_frame.pack_forget()
+    button_frame.pack_forget()
+    page2_frame.pack(fill="both", expand=True)
+
+def precedent():
+    page2_frame.pack_forget()
+    article_frame.pack(padx=10, pady=10, fill="both", expand=True)
+    button_frame.pack(pady=15)
+
+# --- Fenêtre principale ---
 root = ctk.CTk()
 root.title("NHK Easy Articles")
 root.geometry("900x550")
 root.resizable(False, False)
 
-# Zone liste des articles avec scroll
+# Zone liste des articles avec scroll (Page 1)
 article_frame = ctk.CTkScrollableFrame(root, width=850, height=300)
 article_frame.pack(padx=10, pady=10, fill="both", expand=True)
 
@@ -229,14 +232,24 @@ date_frame.pack(pady=10, fill="x")
 date_button = ctk.CTkButton(date_frame, text="Choisir une date/période", command=pick_date, corner_radius=12)
 date_button.pack(side="left", padx=5)
 
-date_label = ctk.CTkLabel(date_frame, text="Aucune date sélectionnée", font=("TakaoPGothic", 14))
+date_label = ctk.CTkLabel(date_frame, text="Aucune date sélectionnée", font=("Verdana", 14))
 date_label.pack(side="left", padx=10)
 
-# Boutons en bas
+# Boutons en bas (Page 1)
 button_frame = ctk.CTkFrame(root)
 button_frame.pack(pady=15)
 
-ctk.CTkButton(button_frame, text="Rechercher", command=fetch_articles, corner_radius=12, width=150).pack(side="left", padx=20)
-ctk.CTkButton(button_frame, text="Suivant", command=suivant, corner_radius=12, width=150).pack(side="left", padx=20)
+ctk.CTkButton(button_frame, text="Rechercher", command=fetch_articles, corner_radius=12, fg_color="#1f6aa5", hover_color="#144870", font=("Verdana", 14)).pack(side="left", padx=5)
+ctk.CTkButton(button_frame, text="Suivant", command=suivant, corner_radius=12, fg_color="#1f6aa5", hover_color="#144870", font=("Verdana", 14)).pack(side="left", padx=5)
+
+# --- Page 2 ---
+page2_frame = ctk.CTkFrame(root)
+page2_text = ctk.CTkTextbox(page2_frame, width=780, height=480, font=("Verdana", 14))
+page2_text.pack(padx=10, pady=10, fill="both", expand=True)
+page2_text.configure(state="disabled")
+
+button_frame2 = ctk.CTkFrame(page2_frame)
+button_frame2.pack(pady=10)
+ctk.CTkButton(button_frame2, text="Précédent", command=precedent, corner_radius=12, fg_color="#1f6aa5", hover_color="#144870", font=("Verdana", 14)).pack()
 
 root.mainloop()
