@@ -14,7 +14,7 @@ date_range = {"start": None, "end": None}
 
 def fetch_articles():
     if not date_range["start"]:
-        messagebox.showerror("Erreur", "Veuillez sélectionner au moins une date.")
+        messagebox.showerror("Erreur", "Veuillez sélectionner au moins une date ou une période.")
         return
 
     start_api = date_range["start"]
@@ -28,11 +28,13 @@ def fetch_articles():
         messagebox.showerror("Erreur", f"Impossible de récupérer les articles : {e}")
         return
 
+    # Reset de la zone articles
     for widget in article_frame.winfo_children():
         widget.destroy()
     checkboxes.clear()
     articles_links.clear()
 
+    # Bouton Tout sélectionner
     toggle_btn = ctk.CTkButton(
         article_frame,
         text="Tout sélectionner",
@@ -101,17 +103,44 @@ def pick_date():
     top.title("Sélectionnez une date ou une période")
     top.geometry(f"+{btn_x}+{btn_y + date_button.winfo_height() + 5}")
 
-    cal = Calendar(top, selectmode="day", year=2025, month=9, day=24)
-    cal.pack(padx=10, pady=10)
+    top.update()
+    top.grab_set()  # bloque l'interaction avec la fenêtre principale
 
-    info_label = ctk.CTkLabel(top, text="Cliquez pour début/fin de période, recliquez sur la même date pour valider un jour seul.")
+    cal_frame = ctk.CTkFrame(top, corner_radius=12, fg_color="#2e2e2e")
+    cal_frame.pack(padx=10, pady=10)
+
+    today = datetime.today().date()
+
+    cal = Calendar(
+        cal_frame,
+        selectmode="day",
+        year=today.year,
+        month=today.month,
+        day=today.day,
+        background="#2e2e2e",
+        disabledbackground="#1e1e1e",
+        foreground="white",
+        disabledforeground="#555555",
+        selectbackground="#1f6aa5",
+        selectforeground="white",
+        weekendbackground="#3a3a3a",
+        weekendforeground="#7ec0ee",  # bleu clair pour weekend
+        othermonthforeground="#888888",
+        bordercolor="#444444",
+        headersbackground="#444444",
+        headersforeground="white",
+        font=("TakaoPGothic", 12),
+        maxdate=today                 # pas de date ultérieure à aujourd'hui
+    )
+    cal.pack(padx=5, pady=5)
+
+    info_label = ctk.CTkLabel(top, text="Cliquez pour début/fin de période. Validez avec OK.", font=("TakaoPGothic", 12))
     info_label.pack(pady=5)
 
-    last_click = {"date": None}
     selecting_period = {"in_progress": False}
 
     def clear_highlight():
-        cal.calevent_remove("all")  # supprime tous les calevents et réinitialise les couleurs
+        cal.calevent_remove("all")
 
     def highlight_range(start, end):
         clear_highlight()
@@ -128,8 +157,24 @@ def pick_date():
         cal.tag_config('start', background="#0066cc", foreground="white")
         cal.tag_config('end', background="#3399ff", foreground="white")
 
-    def update_date_label():
-        if date_range["start"] and date_range["end"] and date_range["start"] != date_range["end"]:
+    def on_click(event):
+        selected = cal.selection_get()
+
+        if not selecting_period["in_progress"] or (date_range["start"] and date_range["end"]):
+            clear_highlight()
+            date_range["start"] = selected
+            date_range["end"] = None
+            selecting_period["in_progress"] = True
+            highlight_range(date_range["start"], date_range["start"])
+        else:
+            if selected < date_range["start"]:
+                date_range["end"], date_range["start"] = date_range["start"], selected
+            else:
+                date_range["end"] = selected
+            highlight_range(date_range["start"], date_range["end"])
+            selecting_period["in_progress"] = False
+
+        if date_range["start"] and date_range["end"] and date_range["end"] != date_range["start"]:
             date_label.configure(
                 text=f"Du {date_range['start'].strftime('%d/%m/%Y')} au {date_range['end'].strftime('%d/%m/%Y')}"
             )
@@ -140,34 +185,17 @@ def pick_date():
         else:
             date_label.configure(text="Aucune date sélectionnée")
 
-    def on_click(event):
-        selected = cal.selection_get()
-
-        # Reset highlight si on commence une nouvelle période
-        if not selecting_period["in_progress"]:
-            clear_highlight()
-            date_range["start"] = selected
-            date_range["end"] = selected
-            selecting_period["in_progress"] = True
-        else:
-            # Deuxième clic = fin de période
-            if selected < date_range["start"]:
-                date_range["end"], date_range["start"] = date_range["start"], selected
-            else:
-                date_range["end"] = selected
-            highlight_range(date_range["start"], date_range["end"])
-            selecting_period["in_progress"] = False
-
-        # Re-clic sur la même date = journée unique
-        if last_click["date"] == selected and date_range["start"] == date_range["end"] == selected:
-            top.after(1, top.destroy)  # <-- remplace top.destroy() direct
-
-
-        last_click["date"] = selected
-        update_date_label()
-
     cal.bind("<<CalendarSelected>>", on_click)
-    ctk.CTkButton(top, text="OK", command=top.destroy, corner_radius=12).pack(pady=5)
+
+    ctk.CTkButton(
+        top,
+        text="OK",
+        command=top.destroy,
+        corner_radius=12,
+        fg_color="#1f6aa5",
+        hover_color="#144870",
+        font=("TakaoPGothic", 14, "bold")
+    ).pack(pady=10)
 
 def suivant():
     selected_articles = []
