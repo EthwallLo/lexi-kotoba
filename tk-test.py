@@ -12,6 +12,7 @@ articles_links = {}
 checkboxes = []
 date_range = {"start": None, "end": None}
 
+# --- Fonctions ---
 def fetch_articles():
     if not date_range["start"]:
         messagebox.showerror("Erreur", "Veuillez sélectionner au moins une date ou une période.")
@@ -98,9 +99,9 @@ def pick_date():
     top = ctk.CTkToplevel(root)
     top.title("Sélectionnez une date ou une période")
     top.geometry(f"+{btn_x}+{btn_y + date_button.winfo_height() + 5}")
-    top.transient(root)  # <-- attache la fenêtre à root
-    top.update()         # <-- force l’affichage avant grab
-    top.grab_set()       # <-- maintenant grab_set() fonctionne
+    top.transient(root)
+    top.update()
+    top.grab_set()
 
     cal_frame = ctk.CTkFrame(top, corner_radius=12, fg_color="#2e2e2e")
     cal_frame.pack(padx=10, pady=10)
@@ -185,35 +186,33 @@ def pick_date():
         font=("Verdana", 14, "bold")
     ).pack(pady=10)
 
-# --- Navigation Page 1 <-> Page 2 ---
+# --- Navigation ---
 def suivant():
-    selected_articles = []
-    selected_links = []
-    for cb, idx in checkboxes:
-        if cb.var.get():
-            selected_articles.append(cb.cget("text"))
-            selected_links.append(articles_links[idx])
-
+    selected_articles = [cb.cget("text") for cb, idx in checkboxes if cb.var.get()]
     if not selected_articles:
         messagebox.showinfo("Aucun article sélectionné", "Veuillez cocher au moins un article.")
         return
 
-    # Remplir la page 2
     page2_text.configure(state="normal")
     page2_text.delete("0.0", "end")
-    for title, link in zip(selected_articles, selected_links):
-        page2_text.insert("end", f"{title} -> {link}\n")
+    for title in selected_articles:
+        page2_text.insert("end", f"{title}\n")
     page2_text.configure(state="disabled")
 
-    # Afficher page 2 et cacher page 1
+    # Cacher page 1 (articles + boutons + date)
     article_frame.pack_forget()
     button_frame.pack_forget()
+    date_frame.pack_forget()
     page2_frame.pack(fill="both", expand=True)
 
 def precedent():
     page2_frame.pack_forget()
     article_frame.pack(padx=10, pady=10, fill="both", expand=True)
     button_frame.pack(pady=15)
+    date_frame.pack(pady=10, fill="x")
+
+def recuperer_vocabulaire():
+    pass  # pour l'instant ne fait rien
 
 # --- Fenêtre principale ---
 root = ctk.CTk()
@@ -221,35 +220,35 @@ root.title("NHK Easy Articles")
 root.geometry("900x550")
 root.resizable(False, False)
 
-# Zone liste des articles avec scroll (Page 1)
+# Page 1
 article_frame = ctk.CTkScrollableFrame(root, width=850, height=300)
 article_frame.pack(padx=10, pady=10, fill="both", expand=True)
 
-# Zone des dates
 date_frame = ctk.CTkFrame(root)
 date_frame.pack(pady=10, fill="x")
-
 date_button = ctk.CTkButton(date_frame, text="Choisir une date/période", command=pick_date, corner_radius=12)
 date_button.pack(side="left", padx=5)
-
 date_label = ctk.CTkLabel(date_frame, text="Aucune date sélectionnée", font=("Verdana", 14))
 date_label.pack(side="left", padx=10)
 
-# Boutons en bas (Page 1)
 button_frame = ctk.CTkFrame(root)
 button_frame.pack(pady=15)
+ctk.CTkButton(button_frame, text="Rechercher", command=fetch_articles, corner_radius=12,
+               fg_color="#1f6aa5", hover_color="#144870", font=("Verdana", 14)).pack(side="left", padx=5)
+ctk.CTkButton(button_frame, text="Suivant", command=suivant, corner_radius=12,
+               fg_color="#1f6aa5", hover_color="#144870", font=("Verdana", 14)).pack(side="left", padx=5)
 
-ctk.CTkButton(button_frame, text="Rechercher", command=fetch_articles, corner_radius=12, fg_color="#1f6aa5", hover_color="#144870", font=("Verdana", 14)).pack(side="left", padx=5)
-ctk.CTkButton(button_frame, text="Suivant", command=suivant, corner_radius=12, fg_color="#1f6aa5", hover_color="#144870", font=("Verdana", 14)).pack(side="left", padx=5)
-
-# --- Page 2 ---
+# Page 2
 page2_frame = ctk.CTkFrame(root)
-page2_text = ctk.CTkTextbox(page2_frame, width=780, height=480, font=("Verdana", 14))
+page2_text = ctk.CTkTextbox(page2_frame, width=780, height=400, font=("Verdana", 14))
 page2_text.pack(padx=10, pady=10, fill="both", expand=True)
 page2_text.configure(state="disabled")
 
 button_frame2 = ctk.CTkFrame(page2_frame)
 button_frame2.pack(pady=10)
-ctk.CTkButton(button_frame2, text="Précédent", command=precedent, corner_radius=12, fg_color="#1f6aa5", hover_color="#144870", font=("Verdana", 14)).pack()
+ctk.CTkButton(button_frame2, text="Précédent", command=precedent, corner_radius=12,
+               fg_color="#1f6aa5", hover_color="#144870", font=("Verdana", 14)).pack(side="left", padx=5)
+ctk.CTkButton(button_frame2, text="Récupérer le vocabulaire", command=recuperer_vocabulaire,
+               corner_radius=12, fg_color="#1f6aa5", hover_color="#144870", font=("Verdana", 14)).pack(side="left", padx=5)
 
 root.mainloop()
