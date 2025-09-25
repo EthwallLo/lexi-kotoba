@@ -13,7 +13,7 @@ def create_main_window():
     root.geometry("900x550")
     root.resizable(False, False)
 
-    # Frames Page 1
+    # Page 1
     root.article_frame = ctk.CTkScrollableFrame(root, width=850, height=300)
     root.article_frame.pack(padx=10, pady=10, fill="both", expand=True)
 

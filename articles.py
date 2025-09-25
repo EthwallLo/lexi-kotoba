@@ -6,6 +6,7 @@ from tkinter import messagebox
 
 articles_links = {}
 checkboxes = []
+nhk_news_base = "https://www3.nhk.or.jp/news/easy/"
 
 def fetch_articles(root):
     if not date_range["start"]:
@@ -44,7 +45,8 @@ def fetch_articles(root):
                 articles = item[date_api]
                 for article in articles:
                     title = article.get("title", "Pas de titre")
-                    link = article.get("news_web_url", "")
+                    link_id = article.get("news_id", "")
+                    link = nhk_news_base + link_id + "/" + link_id + ".html"
                     articles_links[idx] = link
 
                     var = ctk.BooleanVar()

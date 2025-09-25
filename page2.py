@@ -1,10 +1,10 @@
-import customtkinter as ctk
 from articles import checkboxes
+from tkinter import messagebox
+from get_vocabulary import recuperer_vocabulaire  # import depuis get_vocabulary.py
 
 def afficher_page2(root):
     selected_articles = [cb.cget("text") for cb, idx in checkboxes if cb.var.get()]
     if not selected_articles:
-        from tkinter import messagebox
         messagebox.showinfo("Aucun article sélectionné", "Veuillez cocher au moins un article.")
         return
 
@@ -24,7 +24,3 @@ def precedent(root):
     root.article_frame.pack(padx=10, pady=10, fill="both", expand=True)
     root.button_frame.pack(pady=15)
     root.date_frame.pack(pady=10, fill="x")
-
-def recuperer_vocabulaire(root):
-    # Ici tu mettras ton code de récupération de vocabulaire
-    pass
