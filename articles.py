@@ -10,7 +10,7 @@ nhk_news_base = "https://www3.nhk.or.jp/news/easy/"
 
 def fetch_articles(root):
     if not date_range["start"]:
-        messagebox.showerror("Erreur", "Veuillez sélectionner au moins une date ou une période.")
+        messagebox.showerror("Error", "Please select at least a date or period.")
         return
 
     start_api = date_range["start"]
@@ -21,16 +21,15 @@ def fetch_articles(root):
         response = requests.get(url)
         data = response.json()
     except Exception as e:
-        messagebox.showerror("Erreur", f"Impossible de récupérer les articles : {e}")
+        messagebox.showerror("Error", f"Can't fetch the articles : {e}")
         return
 
-    # Reset
     for widget in root.article_frame.winfo_children():
         widget.destroy()
     checkboxes.clear()
     articles_links.clear()
 
-    toggle_btn = ctk.CTkButton(root.article_frame, text="Tout sélectionner", command=lambda: toggle_all(root), corner_radius=12, width=200)
+    toggle_btn = ctk.CTkButton(root.article_frame, text="Select all", command=lambda: toggle_all(root), corner_radius=12, width=200)
     toggle_btn.pack(pady=5)
     root.article_frame.toggle_btn = toggle_btn
 
@@ -44,7 +43,7 @@ def fetch_articles(root):
             if date_api in item:
                 articles = item[date_api]
                 for article in articles:
-                    title = article.get("title", "Pas de titre")
+                    title = article.get("title", "No title")
                     link_id = article.get("news_id", "")
                     link = nhk_news_base + link_id + "/" + link_id + ".html"
                     articles_links[idx] = link
@@ -62,7 +61,7 @@ def fetch_articles(root):
         current_date += timedelta(days=1)
 
     if not found:
-        ctk.CTkLabel(root.article_frame, text="Aucun article trouvé pour cette période").pack(anchor="w", pady=5)
+        ctk.CTkLabel(root.article_frame, text="No article was found for that period.").pack(anchor="w", pady=5)
 
 def toggle_all(root):
     if not checkboxes:
@@ -70,4 +69,4 @@ def toggle_all(root):
     all_selected = all(cb.var.get() for cb, _ in checkboxes)
     for cb, _ in checkboxes:
         cb.var.set(not all_selected)
-    root.article_frame.toggle_btn.configure(text="Tout désélectionner" if not all_selected else "Tout sélectionner")
+    root.article_frame.toggle_btn.configure(text="Unselect all" if not all_selected else "Select all")

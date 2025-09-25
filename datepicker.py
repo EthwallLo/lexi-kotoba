@@ -9,7 +9,7 @@ def pick_date(root):
     btn_x = root.date_button.winfo_rootx()
     btn_y = root.date_button.winfo_rooty()
     top = ctk.CTkToplevel(root)
-    top.title("Sélectionnez une date ou une période")
+    top.title("Select at least one date or period")
     top.geometry(f"+{btn_x}+{btn_y + root.date_button.winfo_height() + 5}")
     top.transient(root)
     top.update()
@@ -26,7 +26,7 @@ def pick_date(root):
                    headersforeground="white", font=("Verdana", 12), maxdate=today)
     cal.pack(padx=5, pady=5)
 
-    info_label = ctk.CTkLabel(top, text="Cliquez pour début/fin de période. Validez avec OK.", font=("Verdana", 12))
+    info_label = ctk.CTkLabel(top, text="Click for beginning/end of period. Validate with OK.", font=("Verdana", 12))
     info_label.pack(pady=5)
 
     selecting_period = {"in_progress": False}
@@ -66,11 +66,11 @@ def pick_date(root):
             selecting_period["in_progress"] = False
 
         if date_range["start"] and date_range["end"] and date_range["end"] != date_range["start"]:
-            root.date_label.configure(text=f"Du {date_range['start'].strftime('%d/%m/%Y')} au {date_range['end'].strftime('%d/%m/%Y')}")
+            root.date_label.configure(text=f"From {date_range['start'].strftime('%d/%m/%Y')} to {date_range['end'].strftime('%d/%m/%Y')}")
         elif date_range["start"]:
             root.date_label.configure(text=f"{date_range['start'].strftime('%d/%m/%Y')}")
         else:
-            root.date_label.configure(text="Aucune date sélectionnée")
+            root.date_label.configure(text="No date selected.")
 
     cal.bind("<<CalendarSelected>>", on_click)
 

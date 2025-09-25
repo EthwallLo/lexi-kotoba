@@ -9,13 +9,12 @@ def extract_kanji_with_furigana(url: str):
         response = requests.get(url)
         response.encoding = response.apparent_encoding
     except Exception as e:
-        print(f"Erreur récupération article : {e}")
+        print(f"Error fetching article : {e}")
         return []
 
     soup = BeautifulSoup(response.text, "html.parser")
     results = []
 
-    # --- Titre ---
     title_tag = soup.find("h1", class_="article-title")
     if title_tag:
         for ruby in title_tag.find_all("ruby"):
@@ -25,7 +24,6 @@ def extract_kanji_with_furigana(url: str):
             if kanji.strip():
                 results.append((kanji.strip(), furigana))
 
-    # --- Corps ---
     article_body = soup.find("div", class_="article-body")
     if article_body:
         for container in article_body.find_all(recursive=False):
@@ -47,48 +45,34 @@ def extract_kanji_with_furigana(url: str):
                     kanji = "".join([t for t in ruby.contents if t.name != "rt" and isinstance(t, str)])
                     furigana = ruby.find("rt").get_text(strip=True) if ruby.find("rt") else ""
                     results.append((kanji, furigana))
-
     return results
 
 def get_translation(word: str, target_lang: str) -> str:
-    """
-    Traduit un mot en utilisant l’API de Jisho + GoogleTranslator si besoin.
-    """
     try:
         url = f"https://jisho.org/api/v1/search/words?keyword={word}"
         r = requests.get(url, timeout=5)
         r.raise_for_status()
         data = r.json()
-
         if data["data"]:
             senses = data["data"][0]["senses"]
             english_defs = senses[0]["english_definitions"]
             english_text = ", ".join(english_defs)
-
             if target_lang == "en":
-                return english_text
+                return english_text 
             else:
                 return GoogleTranslator(source="en", target=target_lang).translate(english_text)
-
-        return "Pas de traduction trouvée"
+        return "No translation found"
     except Exception as e:
         return f"Erreur : {e}"
 
-
-def recuperer_vocabulaire(root):
-    """
-    Récupère le vocabulaire des articles sélectionnés,
-    traduit les mots et affiche le résultat dans page2_text.
-    """
-    # 1️⃣ Articles sélectionnés
+def fetch_vocabulary(root):
     selected_idxs = [idx for cb, idx in checkboxes if cb.var.get()]
     if not selected_idxs:
-        messagebox.showinfo("Info", "Veuillez sélectionner au moins un article.")
+        messagebox.showinfo("Info", "Please select at least one article")
         return
 
-    # 2️⃣ Choix de la langue
     lang_choice = simpledialog.askstring(
-        "Langue",
+        "Langue", # A modifier / mettre ailleurs
         "Choisissez la langue de traduction : fr, en, es, de",
         parent=root
     )
@@ -98,7 +82,6 @@ def recuperer_vocabulaire(root):
     else:
         lang_choice = lang_choice.lower()
 
-    # 3️⃣ Parcours des articles et récupération vocabulaire
     vocab_text = ""
     for idx in selected_idxs:
         url = articles_links.get(idx)
@@ -114,7 +97,6 @@ def recuperer_vocabulaire(root):
                 traduction = get_translation(kanji, lang_choice)
                 vocab_text += f"{kanji} ({furigana}) → {traduction}\n"
 
-    # 4️⃣ Affichage dans la zone texte
     if vocab_text:
         root.page2_text.configure(state="normal")
         root.page2_text.delete("0.0", "end")

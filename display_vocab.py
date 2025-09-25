@@ -1,26 +1,31 @@
 from articles import checkboxes
 from tkinter import messagebox
-from get_vocabulary import recuperer_vocabulaire  # import depuis get_vocabulary.py
+from get_vocabulary import fetch_vocabulary 
 
-def afficher_page2(root):
+def display_secondpage(root):
     selected_articles = [cb.cget("text") for cb, idx in checkboxes if cb.var.get()]
     if not selected_articles:
-        messagebox.showinfo("Aucun article sélectionné", "Veuillez cocher au moins un article.")
+        messagebox.showinfo("No article selected", "Please select at least one article.")
         return
 
+    # Remplir la page 2 avec les titres
     root.page2_text.configure(state="normal")
     root.page2_text.delete("0.0", "end")
     for title in selected_articles:
         root.page2_text.insert("end", f"{title}\n")
     root.page2_text.configure(state="disabled")
 
+    # Masquer la page 1
     root.article_frame.pack_forget()
-    root.button_frame.pack_forget()
     root.date_frame.pack_forget()
+
+    # Afficher la page 2
     root.page2_frame.pack(fill="both", expand=True)
 
-def precedent(root):
+def previous(root):
+    # Masquer la page 2
     root.page2_frame.pack_forget()
+
+    # Réafficher la page 1
     root.article_frame.pack(padx=10, pady=10, fill="both", expand=True)
-    root.button_frame.pack(pady=15)
     root.date_frame.pack(pady=10, fill="x")
