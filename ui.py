@@ -19,29 +19,23 @@ def create_main_window():
     # Page 1
     root.article_frame = ctk.CTkScrollableFrame(root, width=850, height=300)
     root.article_frame.pack(padx=10, pady=10, fill="both", expand=True)
-
-    # Ligne de date + boutons
     root.date_frame = ctk.CTkFrame(root)
     root.date_frame.pack(pady=10, fill="x")
 
-    # Configuration de la grille
     root.date_frame.columnconfigure(0, weight=0)   # bouton Select
     root.date_frame.columnconfigure(1, weight=1)   # label occupe l’espace au milieu
     root.date_frame.columnconfigure(2, weight=0)   # bouton Search
     root.date_frame.columnconfigure(3, weight=0)   # bouton Next
 
-    # Bouton Select a date / period
     root.date_button = ctk.CTkButton(
         root.date_frame, text="Select a date / period", font=("Verdana", 14),
         command=lambda: pick_date(root), corner_radius=12
     )
     root.date_button.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 
-    # Label No date selected
     root.date_label = ctk.CTkLabel(root.date_frame, text="No date selected", font=("Verdana", 14))
     root.date_label.grid(row=0, column=1, padx=10, pady=5, sticky="w")
 
-    # Bouton Search
     ctk.CTkButton(
         root.date_frame, text="Search",
         command=lambda: fetch_articles(root),
@@ -49,13 +43,27 @@ def create_main_window():
         font=("Verdana", 14)
     ).grid(row=0, column=2, padx=5, pady=5, sticky="e")
 
-    # Bouton Next
     ctk.CTkButton(
         root.date_frame, text="Next",
         command=lambda: display_secondpage(root),
         corner_radius=12, fg_color="#1f6aa5", hover_color="#144870",
         font=("Verdana", 14)
     ).grid(row=0, column=3, padx=5, pady=5, sticky="e")
+
+    def set_language(root, lang):
+        root.selected_lang = lang
+
+    root.settings_button = ctk.CTkOptionMenu(
+        root.date_frame,
+        values=["fr", "en", "es", "de"],
+        command=lambda lang: set_language(root, lang),
+        font=("Verdana", 14),
+        button_color="#1f6aa5",
+        button_hover_color="#144870"
+    )
+    root.settings_button.set("en")  # langue par défaut
+    root.selected_lang = "en"
+    root.settings_button.grid(row=0, column=4, padx=5, pady=5, sticky="e")
 
     # Page 2
     root.page2_frame = ctk.CTkFrame(root)

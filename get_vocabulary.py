@@ -71,16 +71,7 @@ def fetch_vocabulary(root):
         messagebox.showinfo("Info", "Please select at least one article")
         return
 
-    lang_choice = simpledialog.askstring(
-        "Langue",
-        "Choisissez la langue de traduction : fr, en, es, de",
-        parent=root
-    )
-    if not lang_choice or lang_choice.lower() not in ("fr", "en", "es", "de"):
-        messagebox.showinfo("Info", "Langue non reconnue, traduction par défaut en français.")
-        lang_choice = "fr"
-    else:
-        lang_choice = lang_choice.lower()
+    lang_choice = getattr(root, "selected_lang", "fr")  # utilise la langue configurée
 
     # Vide le textbox et le rend modifiable
     root.page2_text.configure(state="normal")
@@ -93,16 +84,38 @@ def fetch_vocabulary(root):
 
         kanji_furigana = extract_kanji_with_furigana(url)
 
-        seen = set()
-        for kanji, furigana in kanji_furigana:
-            if (kanji, furigana) not in seen:
-                seen.add((kanji, furigana))
-                traduction = get_translation(kanji, lang_choice)
-                line = f"{kanji} ({furigana}) → {traduction}\n"
-                
-                # Affichage ligne par ligne
-                root.page2_text.insert("end", line)
-                root.page2_text.see("end")    # scroll automatique
-                root.page2_text.update()      # force affichage immédiat
+        # Lire les mots déjà présents dans le fichier
+        existing_words = set()
+        try:
+            with open("words.txt", "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if " - " in line:
+                        existing_words.add(tuple(line.split(" - ", 1)))  # (kanji, furigana)
+        except FileNotFoundError:
+            pass  # si le fichier n'existe pas encore
 
+        seen = set()
+        with open("words.txt", "a", encoding="utf-8") as f:  # 'a' pour ajouter
+            for kanji, furigana in kanji_furigana:
+                if (kanji, furigana) not in seen:
+                    seen.add((kanji, furigana))
+                    traduction = get_translation(kanji, lang_choice)
+
+                    # Vérifier si le mot est nouveau
+                    is_new = (kanji, furigana) not in existing_words
+                    new_indicator = " [!]" if is_new else ""
+
+                    line = f"{kanji} ({furigana}) → {traduction}{new_indicator}\n"
+
+                    # Affichage ligne par ligne dans le textbox
+                    root.page2_text.insert("end", line)
+                    root.page2_text.see("end")
+                    root.page2_text.update()
+
+                    # Ajouter au fichier seulement si pas déjà présent
+                    if is_new:
+                        f.write(f"{kanji} - {furigana}\n")
+                        existing_words.add((kanji, furigana))
+                                  
     root.page2_text.configure(state="disabled")

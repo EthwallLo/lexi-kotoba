@@ -8,24 +8,19 @@ def display_secondpage(root):
         messagebox.showinfo("No article selected", "Please select at least one article.")
         return
 
-    # Remplir la page 2 avec les titres
     root.page2_text.configure(state="normal")
     root.page2_text.delete("0.0", "end")
     for title in selected_articles:
         root.page2_text.insert("end", f"{title}\n")
     root.page2_text.configure(state="disabled")
 
-    # Masquer la page 1
     root.article_frame.pack_forget()
     root.date_frame.pack_forget()
 
-    # Afficher la page 2
     root.page2_frame.pack(fill="both", expand=True)
 
 def previous(root):
-    # Masquer la page 2
     root.page2_frame.pack_forget()
 
-    # Réafficher la page 1
     root.article_frame.pack(padx=10, pady=10, fill="both", expand=True)
     root.date_frame.pack(pady=10, fill="x")

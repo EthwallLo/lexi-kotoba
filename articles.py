@@ -48,14 +48,39 @@ def fetch_articles(root):
                     link = nhk_news_base + link_id + "/" + link_id + ".html"
                     articles_links[idx] = link
 
+                    # ---- nouveau : frame horizontal ----
+                    article_frame = ctk.CTkFrame(root.article_frame)
+                    article_frame.pack(fill="x", pady=3)
+
+                    # checkBox à gauche
                     var = ctk.BooleanVar()
-                    cb = ctk.CTkCheckBox(root.article_frame, text=f"{idx+1}. {title}", variable=var,
-                                          font=("Verdana", 16), corner_radius=8, fg_color="#1f6aa5",
-                                          hover_color="#144870", onvalue=True, offvalue=False)
+                    cb = ctk.CTkCheckBox(
+                        article_frame,
+                        text=f"{idx+1}. {title}",
+                        variable=var,
+                        font=("Verdana", 16),
+                        corner_radius=8,
+                        fg_color="#1f6aa5",
+                        hover_color="#144870",
+                        onvalue=True,
+                        offvalue=False
+                    )
                     cb.var = var
-                    cb.pack(anchor="w", pady=3)
+                    cb.pack(side="left", anchor="w")
+
+                    date_fr = current_date.strftime("%d/%m/%Y")
+
+                    date_label = ctk.CTkLabel(
+                        article_frame,
+                        text=date_fr,
+                        font=("Verdana", 14),
+                        text_color="gray"
+                    )
+                    date_label.pack(side="right", anchor="e", padx=10)
+
                     checkboxes.append((cb, idx))
                     idx += 1
+
                 found = True
                 break
         current_date += timedelta(days=1)
