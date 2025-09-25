@@ -72,7 +72,7 @@ def fetch_vocabulary(root):
         return
 
     lang_choice = simpledialog.askstring(
-        "Langue", # A modifier / mettre ailleurs
+        "Langue",
         "Choisissez la langue de traduction : fr, en, es, de",
         parent=root
     )
@@ -82,7 +82,10 @@ def fetch_vocabulary(root):
     else:
         lang_choice = lang_choice.lower()
 
-    vocab_text = ""
+    # Vide le textbox et le rend modifiable
+    root.page2_text.configure(state="normal")
+    root.page2_text.delete("1.0", "end")
+
     for idx in selected_idxs:
         url = articles_links.get(idx)
         if not url:
@@ -95,12 +98,11 @@ def fetch_vocabulary(root):
             if (kanji, furigana) not in seen:
                 seen.add((kanji, furigana))
                 traduction = get_translation(kanji, lang_choice)
-                vocab_text += f"{kanji} ({furigana}) → {traduction}\n"
+                line = f"{kanji} ({furigana}) → {traduction}\n"
+                
+                # Affichage ligne par ligne
+                root.page2_text.insert("end", line)
+                root.page2_text.see("end")    # scroll automatique
+                root.page2_text.update()      # force affichage immédiat
 
-    if vocab_text:
-        root.page2_text.configure(state="normal")
-        root.page2_text.delete("0.0", "end")
-        root.page2_text.insert("end", vocab_text)
-        root.page2_text.configure(state="disabled")
-    else:
-        messagebox.showinfo("Info", "Aucun vocabulaire trouvé.")
+    root.page2_text.configure(state="disabled")
